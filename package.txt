@@ -1,0 +1,1 @@
+DEVICE:team|id|temp0|temp1|xVect|yVect|zVect|press|time|packageId;
