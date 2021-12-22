@@ -2,10 +2,6 @@
 
 uint8_t devAddr;
 
-void Axel_init(void) {
-  I2C_init(F_CPU, F_SCL);
-}
-
 uint8_t Axel_begin(uint8_t daddr) {
   devAddr = daddr;
   if (!(Axel_addressExists())) return 0;

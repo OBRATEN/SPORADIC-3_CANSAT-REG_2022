@@ -10,6 +10,6 @@
 
 void DS_init(void);
 void DS_readRaw(uint8_t *data);
-void DS_readTemp(char *buff);
+void DS_readTemp(float *temp);
 
 #endif

@@ -65,7 +65,6 @@
 #define AXEL_WAKEUP2 0b10
 #define AXEL_WAKEUP1 0b11
 
-void Axel_init(void);
 uint8_t Axel_begin(uint8_t daddr);
 uint8_t Axel_addressExists(void);
 void Axel_configure(void);

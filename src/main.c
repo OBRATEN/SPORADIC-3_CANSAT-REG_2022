@@ -11,8 +11,11 @@
 #include "ds18b20.c"
 #include "adxl345.h"
 #include "adxl345.c"
+#include "bmp280.h"
+#include "bmp280.c"
 
-volatile uint32_t packageId = 0;
+static uint32_t packageId = 0;
+static uint32_t timeFromStart = 0;
 
 FILE uart_std = FDEV_SETUP_STREAM(UART_writeChar, NULL, _FDEV_SETUP_WRITE);
 
@@ -25,16 +28,26 @@ static inline void blink(void) {
 
 int main(void) {
   UART_init(51);
+  I2C_init(F_CPU, F_SCL);
   stdout = &uart_std;
-  char buff[128];
   float x, y, z;
+  float press, alt, temp0;
+  int32_t temp1;
+  float zeroAlt = 0;
   DS_init();
-  Axel_init();
   if (!(Axel_begin(0x1D))) Axel_begin(0x53);
+  if (!(BMP_begin(0x77))) BMP_begin(0x76);
+  for (uint8_t i = 0; i < 20; i++) {
+    BMP_getData(&temp, &press, &alt);
+    zero += alt;
+  } zero /= 20;
   while (1) {
+    DS_readTemp(&temp0);
     Axel_readXYZ(&x, &y, &z);
-    DS_readTemp(buff);
-    printf("ATmega128a:%s|%f|%f|%f|%ld;\n", buff, x, y, z, packageId);
+    BMP_getData(&temp1, &press, &alt);
+    printf("ATmega128a:%f|%d.%.2d|%f|%f|%f|%.4f|%.4f|%ld|%ld;\n",
+           temp0, temp1 / 100, temp1 % 100, x, y, z,
+           press, alt - zero, packageId, timeFromStart);
     blink();
     packageId++;
   }

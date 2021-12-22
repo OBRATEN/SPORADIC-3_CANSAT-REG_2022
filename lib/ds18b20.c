@@ -17,14 +17,8 @@ void DS_readRaw(uint8_t *data) {
   OW_reset();
 }
 
-void DS_readTemp(char *buff) {
+void DS_readTemp(float *temp) {
   uint8_t temp[2];
-  int8_t digit;
-  uint16_t dec;
   DS_readRaw(temp);
-  digit = temp[0] >> 4;
-  digit |= (temp[1] & 0x7) << 4;
-  dec = temp[0] & 0xf;
-  dec *= .0625;
-  sprintf(buff, "%d.%02u", digit, dec);
+  *temp = (float)((int)temp[0] | (((int)temp[1]) << 8)) * 0.0625 + 0.03125;
 }
