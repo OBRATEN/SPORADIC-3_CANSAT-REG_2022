@@ -10,7 +10,7 @@
 #endif
 
 #include "i2c.h"
-#include "i2c.c"
+#include "i2c.cpp"
 
 #define AXEL_DEF_ADDR 0x1d
 #define AXEL_ALT_ADDR 0x53
@@ -71,5 +71,18 @@ void Axel_configure(void);
 void Axel_powerOn(void);
 void Axel_readXYZ(float *x, float *y, float *z);
 void Axel_readRaw(int16_t *x, int16_t *y, int16_t *z);
+
+class ADXL_self : public I2C_interface {
+public:
+  uint8_t begin(uint8_t addr); 
+  uint8_t addressExists(void);
+  void configure(void);
+  void powerOn(void);
+  void readXYZ(float *x, float *y, float *z);
+  void readRawData(int16_t *x, int16_t *y, int16_t *z);
+  void changeDevAddr(uint8_t addr);
+private:
+  uint8_t devAddr;
+};
 
 #endif

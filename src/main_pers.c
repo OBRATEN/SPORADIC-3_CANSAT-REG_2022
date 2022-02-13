@@ -7,7 +7,6 @@
 
 #include "uart.h"
 #include "uart.c"
-/*
 #include "ds18b20.h"
 #include "ds18b20.c"
 #include "adxl345.h"
@@ -16,12 +15,9 @@
 #include "bmp280.c"
 #include "timer.h"
 #include "timer.c"
-*/
-#include "nrf2401.h"
-#include "nrf2401.c"
 
-//static uint32_t packageId = 0;
-//static uint32_t timeFromStart = 0;
+static uint32_t packageId = 0;
+static uint32_t timeFromStart = 0;
 
 FILE uart_std = FDEV_SETUP_STREAM(UART_writeChar, NULL, _FDEV_SETUP_WRITE);
 
@@ -33,16 +29,12 @@ static inline void blink(void) {
 }
 
 int main(void) {
-  //UART_init(51);
-  //stdout = &uart_std;
+  UART_init(51);
   I2C_init(F_CPU, F_SCL);
-  //TIMER_init(F_CPU);
-  nRF_init();
-  nRF_start();
-  /*
-  float x = 0, y = 0, z = 0;
-  float press = 0, alt = 0, temp0 = 0;
-  int32_t temp1 = 0;
+  stdout = &uart_std;
+  float x, y, z;
+  float press, alt, temp0;
+  int32_t temp1;
   float zeroAlt = 0;
   DS_init();
   if (!(Axel_begin(0x1D))) Axel_begin(0x53);
@@ -50,21 +42,15 @@ int main(void) {
   for (uint8_t i = 0; i < 20; i++) {
     BMP_getData(&temp1, &press, &alt);
     zeroAlt += alt;
-  } zeroAlt /= 20;*/
-  uint8_t message[32];
-  for (uint8_t i = 0; i < 32; i++) message[i] = i;
+  } zeroAlt /= 20;
   while (1) {
-    //printf("a");
-    //if (UART_writeCharA('a')) blink();
-    nRF_sendMessage(message, 32);
-    blink();
-    _delay_ms(5000);
-    /*DS_readTemp(&temp0);
+    DS_readTemp(&temp0);
     Axel_readXYZ(&x, &y, &z);
     BMP_getData(&temp1, &press, &alt);
-    printf("ATmega128a:%f|%ld.%.2ld|%f|%f|%f|%.4f|%.4f|%ld|%ld;\n",
+    printf("ATmega128a:%f|%ld.%.2ld|%f|%f|%f|%.4f|%.4f|%ld|%ld|%ld;\n",
            temp0, temp1 / 100, temp1 % 100, x, y, z,
-           press, alt - zeroAlt, packageId, timeFromStart);
-    packageId++;*/
+           press, alt - zeroAlt, TIMER_millis(), packageId, timeFromStart);
+    blink();
+    packageId++;
   }
 }

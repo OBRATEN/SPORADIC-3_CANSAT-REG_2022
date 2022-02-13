@@ -36,7 +36,7 @@
 #define BMP_CFG  (BMP_TSB250 << 5)   | (BMP_FILTC4 << 2)      | (BMP_NOSPI)
 #define BMP_MEAS (BMP_OVSAMP_T2 << 5) | (BMP_OVSAMP_T16 << 2) | (BMP_FORCE)
 
-
+/*
 uint8_t BMP_init(void);
 void BMP_writeReg(uint8_t addr, uint8_t data);
 uint8_t BMP_readReg1B(uint8_t addr);
@@ -50,5 +50,27 @@ int32_t BMP_readTemp(void);
 void BMP_readFloatPress(int32_t *temp, float *press);
 float BMP_readAlt(float *press);
 uint8_t BMP_getData(int32_t *temp, float *press, float *alt);
+*/
+
+class BMP_self : public I2C_interface {
+public:
+  uint8_t begin(uint8_t addr);
+  void writeReg1B(uint8_t addr, uint8_t data);
+  uint8_t readReg1B(uint8_t addr);
+  uint16_t readReg2B(uint8_t addr);
+  uint16_t readReg2BLE(uint8_t addr);
+  int16_t readRegS2BLE(uint8_t addr);
+  uint32_t readReg3B(uint8_t addr);
+  void readCalData(void);
+  int32_t readTemp(void);
+  void readFloatPress(int32_t *temp, float *press);
+  float readAlt(float *press);
+  uint8_t getData(int32_t *temp, float *press, float *alt);
+private:
+  uint8_t devAddr;
+  uint8_t t1, p1;
+  int16_t t2, t3, p2, p3, p4, p5, p6, p7, p8, p9;
+  int32_t t_fine;
+};
 
 #endif

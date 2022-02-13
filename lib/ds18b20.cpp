@@ -1,10 +1,10 @@
 #include "ds18b20.h"
 
-void DS_init(void) {
+DS18_term::DS18_term(void) {
   OW_init();
 }
 
-void DS_readRaw(uint8_t *data) {
+void DS18_term::readRawData(uint8_t *data) {
   OW_reset();
   OW_writeByte(0xCC);
   OW_writeByte(0x44);
@@ -17,8 +17,8 @@ void DS_readRaw(uint8_t *data) {
   OW_reset();
 }
 
-void DS_readTemp(float *res) {
+void DS18_term::readTemp(float *res) {
   uint8_t temp[2];
-  DS_readRaw(temp);
+  DS18_term::readRawData(temp);
   *res = (float)((int)temp[0] | (((int)temp[1]) << 8)) * 0.0625 + 0.03125;
 }
