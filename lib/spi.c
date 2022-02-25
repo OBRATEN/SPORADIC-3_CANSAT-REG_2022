@@ -6,7 +6,7 @@
 #define MOSI PINB2
 #define MISO PINB3
 
-uint8_t datareg;
+uint8_t SPIdatareg;
 
 void SPI_init(void) {
   SPI_DDR |= (1 << MOSI) | (1 << SCK) | (1 << SS);
@@ -18,7 +18,7 @@ void SPI_init(void) {
 uint8_t SPI_writeByte(uint8_t data) {
   SPDR = data;
   while (!(SPSR & (1 << SPIF)));
-  datareg = SPDR;
+  SPIdatareg = SPDR;
   return data;
 }
 

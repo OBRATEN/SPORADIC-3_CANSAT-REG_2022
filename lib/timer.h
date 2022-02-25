@@ -2,13 +2,12 @@
 #define TIMER_H
 
 #include <avr/io.h>
-#include <util/atomic.h>
 #include <avr/interrupt.h>
+#include <util/atomic.h>
 
-volatile uint32_t timer_millis;
+ISR(TIMER1_COMA_vect);
 
-ISR(TIMER1_COMPA_vect);
-void TIMER_init(uint32_t f_cpu);
-uint32_t TIMER_millis(void);
+void Timer_init(uint32_t f_cpu);
+uint32_t millis(void);
 
 #endif

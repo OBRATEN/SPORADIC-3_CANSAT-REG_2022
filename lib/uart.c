@@ -18,38 +18,7 @@ int UART_writeChar(char data, FILE *stream) {
 	return 0;
 }
 
-uint8_t UART_writeCharA(char data) {
-	uint8_t tr = 250;
-	while (tr) {
-		if (!(UCSR0A & (1 << UDRE0))) tr--;
-		else break;
-	} if (tr <= 0) return 0;
-	UDR0 = data;
-	return 1;
-}
-
-/*
-void UART_writeArray(char *array) {
-	uint8_t idx = 0;
-	while (array[idx] != 0x00) {
-		UART_writeChar(array[idx]);
-		idx++;
-	}
-}
-*/
-
-char UART_getChar(void) {
+int UART_getChar(FILE *stream) {
 	while (!(UCSR0A & (1 << RXC0)));
 	return UDR0;
 }
-
-void UART_getString(char *array, char del) {
-  uint8_t idx = 0;
-  char c;
-  do {
-    c = UART_getChar();
-    array[idx++] = c;
-	} while (c != del);
-	array[idx + 1] = 0;
-}
-

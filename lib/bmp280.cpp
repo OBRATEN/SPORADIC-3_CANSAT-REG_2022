@@ -1,34 +1,34 @@
-#include "bmp280.h"
+#include "bmp280.hpp"
 
-void BMP_self::writeReg1B(uint8_t addr, uint8_t data) {
-  this->writeReg(devAddr, addr, data);
+void BMP_press::writeReg1B(uint8_t addr, uint8_t data) {
+  I2C_interface::writeReg(devAddr, addr, data);
 }
 
-uint8_t BMP_self::readReg1B(uint8_t addr) {
+uint8_t BMP_press::readReg1B(uint8_t addr) {
   uint8_t data;
-  this->readReg(devAddr, addr, 1, &data);
+  I2C_interface::readReg(devAddr, addr, 1, &data);
   return data;
 }
 
-uint16_t BMP_self::readReg2B(uint8_t addr) {
+uint16_t BMP_press::readReg2B(uint8_t addr) {
   uint8_t buff[2];
-  this->readReg(devAddr, addr, 2, buff);
+  I2C_interface::readReg(devAddr, addr, 2, buff);
   return ((uint16_t)((buff[0] << 8) | buff[1]));
 }
 
-uint16_t BMP_self::readReg2BLE(uint8_t reg) {
+uint16_t BMP_press::readReg2BLE(uint8_t reg) {
   uint16_t buff = this->readReg2B(reg);
   return (buff >> 8) | (buff << 8);
 }
 
-int16_t BMP_self::readRegS2BLE(uint8_t reg) {
+int16_t BMP_press::readRegS2BLE(uint8_t reg) {
   return (int16_t)this->readReg2BLE(reg);
 }
 
-uint32_t BMP_self::readReg3B(uint8_t addr) {
+uint32_t BMP_press::readReg3B(uint8_t addr) {
   uint8_t buff[3];
   uint32_t temp;
-  this->readReg(devAddr, addr, 3, buff);
+  I2C_interface::readReg(devAddr, addr, 3, buff);
   temp = buff[0];
   temp <<= 8;
   temp |= buff[1];
@@ -37,7 +37,7 @@ uint32_t BMP_self::readReg3B(uint8_t addr) {
   return temp;
 }
 
-void BMP_self::readCalData(void) {
+void BMP_press::readCalData(void) {
   t1 = this->readReg2BLE(BMP_T1REG);
   t2 = this->readRegS2BLE(BMP_T2REG);
   t3 = this->readRegS2BLE(BMP_T3REG);
@@ -52,7 +52,7 @@ void BMP_self::readCalData(void) {
   p9 = this->readRegS2BLE(BMP_P9REG);
 }
 
-uint8_t BMP_self::begin(uint8_t addr) {
+uint8_t BMP_press::begin(uint8_t addr) {
   devAddr = addr;
   if (this->readReg1B(BMP_CHIPIDREG) != BMP_CHIPIDVAL) return 0;
   this->readCalData();
@@ -60,7 +60,7 @@ uint8_t BMP_self::begin(uint8_t addr) {
   return 1;
 }
 
-int32_t BMP_self::readTemp(void) {
+int32_t BMP_press::readTemp(void) {
   int32_t dig, dec;
   int32_t aTemp, temp;
   aTemp = (this->readReg3B(BMP_TEMPDATAREG) >> 4);
@@ -72,7 +72,7 @@ int32_t BMP_self::readTemp(void) {
   return temp;
 }
 
-void BMP_self::readFloatPress(int32_t *temp, float *press) {
+void BMP_press::readFloatPress(int32_t *temp, float *press) {
   float d1, d2;
   int32_t aPress;
   *temp = this->readTemp();
@@ -96,7 +96,7 @@ void BMP_self::readFloatPress(int32_t *temp, float *press) {
   return;
 }
 
-float BMP_self::readAlt(float *press) {
+float BMP_press::readAlt(float *press) {
   float temp, alt;
   temp = (float)*press / 101325;
   temp = 1 - pow(temp, 0.19029);
@@ -104,7 +104,7 @@ float BMP_self::readAlt(float *press) {
   return alt;
 }
 
-uint8_t BMP_self::getData(int32_t *temp, float *press, float *alt) {
+uint8_t BMP_press::getData(int32_t *temp, float *press, float *alt) {
   this->writeReg1B(BMP_CTRLREG, BMP_MEAS);
   _delay_ms(44);
   this->readFloatPress(temp, press);

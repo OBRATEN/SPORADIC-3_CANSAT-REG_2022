@@ -1,1 +1,1 @@
-DEVICE:team|id|temp0|temp1|xVect|yVect|zVect|press|time|packageId;
+DEVICE:team|packageId|time|DStemp|BMPtemp|aX|aY|aZ|press|alt|GPSDATA;
