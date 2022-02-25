@@ -1,0 +1,1 @@
+DEVICE:team|packageId|time|DStemp|BMPtemp|aX|aY|aZ|press|alt|GPSDATA;
