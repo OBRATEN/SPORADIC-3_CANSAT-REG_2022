@@ -14,6 +14,7 @@
 #include "ds18b20.hpp"
 #include "adxl345.hpp"
 #include "bmp280.hpp"
+#include "nrf24l01.hpp"
 
 #define DS_TIME_INTERVAL 750
 
@@ -41,6 +42,8 @@ static float press = 0;
 static float alt = 0;
 static float zeroAlt = 0;
 
+static char testMessage[12] = "12345678901";
+
 void calibrateAltitude(BMP_press* bmp, uint8_t times) {
   for (uint8_t i = 0; i < 20; i++) {
     bmp->getData(&BMPtemp, &press, &alt);
@@ -49,19 +52,19 @@ void calibrateAltitude(BMP_press* bmp, uint8_t times) {
 }
 
 void initSensors(ADXL_gyro* adxl, BMP_press* bmp) {
-  if (!(adxl->begin(0x1d))) adxl->begin(0x53);
-  if (!(bmp->begin(0x77))) bmp->begin(0x76);
+  if (!(adxl->begin(0x1d, 0))) adxl->begin(0x53, 0);
+  if (!(bmp->begin(0x77, 0))) bmp->begin(0x76, 0);
 }
 
 int main(void) {
   cli();
-  I2C_interface i2c;
-  i2c.init(F_CPU, F_SCL);
   DS18_term ds;
   ADXL_gyro adxl;
   BMP_press bmp;
   Timer_init(F_CPU);
   initSensors(&adxl, &bmp);
+  //nRF_radio nrf;
+  //nrf.begin(0);
   sei();
   for (;;) {
     float oldDStemp = DStemp;
@@ -80,6 +83,7 @@ int main(void) {
     if (press != oldPress) blink();
     packageID++;
     globalTime = millis();
+    //nrf.sendMessage(testMessage, 12);
   }
   return 0;
 }

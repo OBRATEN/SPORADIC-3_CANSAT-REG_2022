@@ -1,7 +1,13 @@
 #ifndef BMP_H
 #define BMP_H
 
+#ifndef F_CPU
 #define F_CPU 8000000UL
+#endif
+
+#ifndef F_SCL
+#define F_SCL 100000
+#endif
 
 #include <avr/io.h>
 #include <util/delay.h>
@@ -39,9 +45,9 @@
 #define BMP_CFG  (BMP_TSB250 << 5)    | (BMP_FILTC4 << 2)     | (BMP_NOSPI)
 #define BMP_MEAS (BMP_OVSAMP_T2 << 5) | (BMP_OVSAMP_T16 << 2) | (BMP_FORCE)
 
-class BMP_press : public I2C_interface {
+class BMP_press {
 public:
-  uint8_t begin(uint8_t addr);
+  uint8_t begin(uint8_t addr, uint8_t I2C_inited);
   void writeReg1B(uint8_t addr, uint8_t data);
   uint8_t readReg1B(uint8_t addr);
   uint16_t readReg2B(uint8_t addr);
@@ -58,6 +64,7 @@ private:
   uint8_t t1, p1;
   int16_t t2, t3, p2, p3, p4, p5, p6, p7, p8, p9;
   int32_t t_fine;
+  I2C_interface _i2c;
 };
 
 #endif

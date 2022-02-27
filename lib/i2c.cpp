@@ -14,6 +14,7 @@ uint8_t I2C_interface::inited(void) {
 }
 
 uint8_t I2C_interface::start(void) {
+  if (!(_inited)) return 0;
   TWCR = ((1 << TWINT) | (1 << TWEN) | (1 << TWSTA));
   while(!(TWCR & (1 << TWINT)));
   this->_started = 1;
@@ -21,18 +22,21 @@ uint8_t I2C_interface::start(void) {
 }
 
 uint8_t I2C_interface::stop(void) {
+  if (!(_started)) return 0;
   TWCR = ((1 << TWINT) | (1 << TWEN) | (1 << TWSTO));
   this->_started = 0;
   return 1;
 }
 
 uint8_t I2C_interface::close(void) {
+  if (!(_inited)) return 0;
   TWCR &= ~(1 << TWEN);
   this->_inited = 0;
   return 1;
 }
 
 uint8_t I2C_interface::writeByte(uint8_t data) {
+  if (!(_inited) || !(_started)) return 0;
 	uint8_t response = 0;
   TWDR = data;
   //if (!this->start()) return response;
@@ -45,6 +49,7 @@ uint8_t I2C_interface::writeByte(uint8_t data) {
 }
 
 uint8_t I2C_interface::readByte(uint8_t *data, uint8_t opt) {
+  if (!(_inited) || !(_started)) return 0;
   if (opt) TWCR |= (1 << TWEA);
   else TWCR &= ~(1 << TWEA);
   uint8_t response = 0;

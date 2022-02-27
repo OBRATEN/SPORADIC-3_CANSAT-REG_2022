@@ -1,15 +1,8 @@
 #include "adxl345.hpp"
 
-uint8_t ADXL_gyro::initI2C(uint32_t f_cpu, uint32_t f_scl) {
-  if (this->inited()) return 2;
-  I2C_interface::init(f_cpu, f_scl);
-  if (this->inited()) return 1;
-  return 0;
-}
-
 uint8_t ADXL_gyro::addressExists() {
   uint8_t dev = 0x00;
-  I2C_interface::readReg(_devAddr, AXEL_DEVID, 1, &dev);
+  _i2c.readReg(_devAddr, AXEL_DEVID, 1, &dev);
   if (dev == AXEL_DEV) return 1;
   return 0;
 }
@@ -21,7 +14,7 @@ void ADXL_gyro::configure(void) {
   config |= AXEL_FULLRES;
   config |= AXEL_NOJUSTIFY;
   config |= AXEL_RANGE16G;
-  I2C_interface::writeReg(_devAddr, AXEL_DATAF, config);
+  _i2c.writeReg(_devAddr, AXEL_DATAF, config);
 }
 
 void ADXL_gyro::powerOn(void) {
@@ -29,13 +22,14 @@ void ADXL_gyro::powerOn(void) {
   config |= AXEL_MEASURE;
   config |= AXEL_NOSLEEP;
   config |= AXEL_WAKEUP8;
-  I2C_interface::writeReg(_devAddr, AXEL_POWERCTL, config);
+  _i2c.writeReg(_devAddr, AXEL_POWERCTL, config);
 }
 
-uint8_t ADXL_gyro::begin(uint8_t addr) {
+uint8_t ADXL_gyro::begin(uint8_t addr, uint8_t I2C_inited) {
+  if (!(I2C_inited)) _i2c.init(F_CPU, F_SCL);
   _devAddr = addr;
   if (!(this->addressExists())) return 0;
-  I2C_interface::writeReg(_devAddr, AXEL_BW_RATE_REG, AXEL_BW_RATE_25);
+  _i2c.writeReg(_devAddr, AXEL_BW_RATE_REG, AXEL_BW_RATE_25);
   this->configure();
   this->powerOn();
   return 1;
@@ -51,7 +45,7 @@ void ADXL_gyro::readXYZ(float *x, float *y, float *z) {
 
 void ADXL_gyro::readRawData(int16_t *x, int16_t *y, int16_t *z) {
   uint8_t axisBuff[6];
-  I2C_interface::readReg(_devAddr, 0x32, 6, axisBuff);
+  _i2c.readReg(_devAddr, 0x32, 6, axisBuff);
   *x = (((int)axisBuff[1]) << 8) | axisBuff[0];
   *y = (((int)axisBuff[3]) << 8) | axisBuff[2];
   *z = (((int)axisBuff[5]) << 8) | axisBuff[4];

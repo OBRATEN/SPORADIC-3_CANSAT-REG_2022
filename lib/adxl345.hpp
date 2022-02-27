@@ -64,10 +64,10 @@
 
 #include "i2c.hpp"
 
-class ADXL_gyro : public I2C_interface {
+class ADXL_gyro {
 public:
 	uint8_t initI2C(uint32_t f_cpu, uint32_t f_scl);
-  uint8_t begin(uint8_t addr); 
+  uint8_t begin(uint8_t addr, uint8_t I2C_inited); 
   uint8_t addressExists();
   void configure(void);
   void powerOn(void);
@@ -76,6 +76,7 @@ public:
   void changeDevAddr(uint8_t addr);
 private:
   uint8_t _devAddr;
+  I2C_interface _i2c;
 };
 
 #endif

@@ -1,18 +1,18 @@
 #include "bmp280.hpp"
 
 void BMP_press::writeReg1B(uint8_t addr, uint8_t data) {
-  I2C_interface::writeReg(devAddr, addr, data);
+  _i2c.writeReg(devAddr, addr, data);
 }
 
 uint8_t BMP_press::readReg1B(uint8_t addr) {
   uint8_t data;
-  I2C_interface::readReg(devAddr, addr, 1, &data);
+  _i2c.readReg(devAddr, addr, 1, &data);
   return data;
 }
 
 uint16_t BMP_press::readReg2B(uint8_t addr) {
   uint8_t buff[2];
-  I2C_interface::readReg(devAddr, addr, 2, buff);
+  _i2c.readReg(devAddr, addr, 2, buff);
   return ((uint16_t)((buff[0] << 8) | buff[1]));
 }
 
@@ -28,7 +28,7 @@ int16_t BMP_press::readRegS2BLE(uint8_t reg) {
 uint32_t BMP_press::readReg3B(uint8_t addr) {
   uint8_t buff[3];
   uint32_t temp;
-  I2C_interface::readReg(devAddr, addr, 3, buff);
+  _i2c.readReg(devAddr, addr, 3, buff);
   temp = buff[0];
   temp <<= 8;
   temp |= buff[1];
@@ -52,7 +52,8 @@ void BMP_press::readCalData(void) {
   p9 = this->readRegS2BLE(BMP_P9REG);
 }
 
-uint8_t BMP_press::begin(uint8_t addr) {
+uint8_t BMP_press::begin(uint8_t addr, uint8_t I2C_inited) {
+  if (!(I2C_inited)) _i2c.init(F_CPU, F_SCL);
   devAddr = addr;
   if (this->readReg1B(BMP_CHIPIDREG) != BMP_CHIPIDVAL) return 0;
   this->readCalData();
