@@ -19,26 +19,24 @@
 #include "nrf24l01.hpp"
 
 #define DS_TIME_INTERVAL 750
-#define NRF_TIME_INTERVAL 1
+#define NRF_TIME_INTERVAL 80
 
 inline void blink(uint8_t times) {
   cli();
   for (uint8_t i = 0; i < times; i++) {
-    PORTG |= (1 << PING3);
+    PORTB |= _BV(PINB6);
     _delay_ms(100);
-    PORTG &= ~(1 << PING3);
+    PORTB &= ~_BV(PINB6);
     _delay_ms(100);
-  }
-  sei();
+  } sei();
 }
 
 static uint32_t globalTime = 0;
 static uint32_t packageID = 0;
 
-//static uint32_t DS_time_mark = DS_TIME_INTERVAL;
+static uint32_t DS_time_mark = DS_TIME_INTERVAL;
 static uint32_t NRF_time_mark = NRF_TIME_INTERVAL;
 
-/*
 static float aX = 0;
 static float aY = 0;
 static float aZ = 0;
@@ -48,12 +46,11 @@ static int32_t BMPtemp = 0;
 static float press = 0;
 static float alt = 0;
 static float zeroAlt = 0;
+
+char testMessage[32];
+
 uint8_t rxDataPtr;
-*/
 
-char testMessage[12];
-
-/*
 void calibrateAltitude(BMP_press* bmp, uint8_t times) {
   for (uint8_t i = 0; i < 20; i++) {
     bmp->getData(&BMPtemp, &press, &alt);
@@ -65,7 +62,6 @@ void initSensors(ADXL_gyro* adxl, BMP_press* bmp) {
   if (!(adxl->begin(0x1d, 0))) adxl->begin(0x53, 0);
   if (!(bmp->begin(0x77, 0))) bmp->begin(0x76, 0);
 }
-*/
 
 /*ISR(USART1_RXC_vect) {
   blink();
@@ -74,7 +70,7 @@ void initSensors(ADXL_gyro* adxl, BMP_press* bmp) {
 
 int main(void) {
   cli();
-  DDRG |= (1 << PING3);
+  DDRB |= (1 << PINB6);
   //UART_init(53, 1);
   //uart_str = fdevopen(UART_writeChar1, UART_getChar1);
   //stdout = uart_str;
@@ -85,9 +81,15 @@ int main(void) {
   //initSensors(&adxl, &bmp);
   nRF_radio nrf;
   nrf.begin();
-  memset(testMessage, 't', 12);
+  for (uint8_t c = 0; c < 32; c++) testMessage[c] = 'a';
   blink(3);
   sei();
+  for (;;) {
+    PORTB |= _BV(PINB6);
+    _delay_ms(100);
+    PORTB &= ~_BV(PINB6);
+    _delay_ms(100);
+  }
   for (;;) {
     /*
     if (millis() > DS_time_mark) {

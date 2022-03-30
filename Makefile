@@ -17,7 +17,7 @@ cppcompile:
 	avr-objcopy -j .text -j .data -O ihex build/$(TARGET).elf build/$(TARGET).hex
 	avr-size --format=avr --mcu=$(DEVICE) build/$(TARGET).elf
 upload:
-	$(UPLOADER) -v -p $(DEVICE) -c $(PROGRAMMER) -U flash:w:build/$(TARGET).hex:i
+	$(UPLOADER) -v -p $(DEVICE) -c $(PROGRAMMER) -U lfuse:w:0xc4:m -U hfuse:w:0x99:m -U efuse:w:0xff:m -U flash:w:build/$(TARGET).hex:i 
 clean:
 	rm build/$(TARGET).elf
 	rm build/$(TARGET).hex
