@@ -9,6 +9,12 @@
 #define F_SCL 100000
 #endif
 
+/* Библиотека связи с баротермометром BMP280
+ * Автор: Гарагуля Артур, "SPORADIC", г. Курск
+ * Интерфейс: I2C
+ * Зависимости: avr, i2c
+ */
+
 #include <avr/io.h>
 #include <util/delay.h>
 #include "i2c.hpp"

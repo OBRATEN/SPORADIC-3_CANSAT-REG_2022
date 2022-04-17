@@ -10,13 +10,13 @@
 #include <util/delay.h>
 
 #include "timer.h"
-#include "onewire.hpp"
 #include "uart.h"
-#include "i2c.hpp"
 #include "ds18b20.hpp"
 #include "adxl345.hpp"
 #include "bmp280.hpp"
 #include "nrf24l01.hpp"
+#include "fat.hpp"
+
 
 #define DS_TIME_INTERVAL 750
 #define NRF_TIME_INTERVAL 1
@@ -32,8 +32,17 @@ inline void blink(uint8_t times) {
   sei();
 }
 
+inline void light(uint8_t time) {
+  cli();
+  PORTG |= (1 << PING3);
+  _delay_ms(100 * time);
+  PORTG &= ~(1 << PING3);
+  sei();
+}
+
 static uint32_t globalTime = 0;
 static uint32_t packageID = 0;
+static uint8_t mode = 0;
 
 //static uint32_t DS_time_mark = DS_TIME_INTERVAL;
 static uint32_t NRF_time_mark = NRF_TIME_INTERVAL;
@@ -51,7 +60,7 @@ static float zeroAlt = 0;
 uint8_t rxDataPtr;
 */
 
-char testMessage[12];
+static uint8_t testMessage[32];
 
 /*
 void calibrateAltitude(BMP_press* bmp, uint8_t times) {
@@ -85,26 +94,37 @@ int main(void) {
   //initSensors(&adxl, &bmp);
   nRF_radio nrf;
   nrf.begin();
-  memset(testMessage, 't', 12);
+  memset(testMessage, 't', 32);
   blink(3);
   sei();
-  for (;;) {
-    /*
-    if (millis() > DS_time_mark) {
-      ds.readTemp(&DStemp);
-      DS_time_mark = millis() + DS_TIME_INTERVAL;
+  if (mode == 0) {
+    for (;;) {
+      /*
+      if (millis() > DS_time_mark) {
+        ds.readTemp(&DStemp);
+        DS_time_mark = millis() + DS_TIME_INTERVAL;
+      }
+      adxl.readXYZ(&aX, &aY, &aZ);
+      bmp.getData(&BMPtemp, &press, &alt);
+      //printf("asdasd");
+      */
+      if (millis() > NRF_time_mark) {
+        if (nrf.send(testMessage, 32)) blink(1);
+        NRF_time_mark = millis() + NRF_TIME_INTERVAL;
+      }
+      packageID++;
+      globalTime = millis();
     }
-    adxl.readXYZ(&aX, &aY, &aZ);
-    bmp.getData(&BMPtemp, &press, &alt);
-    //printf("asdasd");
-    */
-    if (millis() > NRF_time_mark) {
-      nrf.sendMessage(testMessage, 32);
-      NRF_time_mark = millis() + NRF_TIME_INTERVAL;
+  } else if (mode == 1) {
+    for (;;) {
+      if (nrf.checkW()) blink(1);
+      _delay_ms(500);
+      if (nrf.checkR()) blink(1);
+      _delay_ms(500);
+      if (nrf.checkRW()) blink(1);
+      _delay_ms(500);
+      light(10);
     }
-    packageID++;
-    globalTime = millis();
-    blink(1);
   }
   return 0;
 }

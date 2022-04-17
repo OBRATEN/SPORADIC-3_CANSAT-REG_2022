@@ -9,6 +9,12 @@
 #define F_SCL 100000
 #endif
 
+/* Библиотека связи с акселерометром ADXL345
+ * Автор: Гарагуля Артур, "SPORADIC", г. Курск
+ * Интерфейс: I2C
+ * Зависимости: avr, i2c
+ */
+
 #define AXEL_DEF_ADDR 0x1d
 #define AXEL_ALT_ADDR 0x53
 #define AXEL_DEVID 0x00
@@ -66,7 +72,7 @@
 
 class ADXL_gyro {
 public:
-	uint8_t initI2C(uint32_t f_cpu, uint32_t f_scl);
+  uint8_t initI2C(uint32_t f_cpu, uint32_t f_scl);
   uint8_t begin(uint8_t addr, uint8_t I2C_inited); 
   uint8_t addressExists();
   void configure(void);

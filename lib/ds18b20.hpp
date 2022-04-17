@@ -1,8 +1,13 @@
 #ifndef DS18B20_H
 #define DS18B20_H
 
-#include <avr/io.h>
+/* Библиотека взаимодействия с термометром DS18B20
+ * Автор: Гарагуля Артур, "SPORADIC", г. Курск
+ * Интерфейс: OneWire
+ * Зависимости: avr, onewire
+ */
 
+#include <avr/io.h>
 #include "onewire.hpp"
 
 class DS18_term : public OW_interface {

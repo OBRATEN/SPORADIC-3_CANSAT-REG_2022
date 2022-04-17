@@ -8,9 +8,9 @@ void SPI_interface::init(void) {
          (0 << DORD) |
          (1 << MSTR) |
          (0 << CPOL) |
-         (0 << SPR1) | (0 << SPR0);
+         (1 << SPR1) | (1 << SPR0);
+  SPSR = 0x00;
   _inited = 1;
-  SPSR |= _BV(SPI2X);
 }
 
 uint8_t SPI_interface::inited(void) {
@@ -35,6 +35,7 @@ uint8_t SPI_interface::readByte(void) {
 uint8_t SPI_interface::writeReadByte(uint8_t data) {
   //if (!(_inited)) return 0;
   SPDR = data;
+  asm volatile("nop");
   while(!(SPSR & (1 << SPIF)));
   return SPDR;
 }

@@ -6,6 +6,12 @@
 #include "spi.hpp"
 #include <util/delay.h>
 
+/* Библиотека управления радиомодулем nRF24L01+
+ * Автор: Гарагуля Артур, "SPORADIC", г. Курск
+ * Интерфейс: SPI + 1 digital pin
+ * Зависимости: avr, spi
+ */
+
 #define CSN PINB0
 #define CE PINB4
 
@@ -133,14 +139,24 @@
 class nRF_radio {
 public:
   void begin(void);
-  uint8_t sendSPI(uint8_t addr, uint8_t *data, uint8_t count);
-  uint8_t writeReg(uint8_t addr, uint8_t *data, uint8_t count);
-  uint8_t readReg(uint8_t addr, uint8_t *data, uint8_t count);
-  uint8_t sendMessage(const char *data, uint8_t size);
-  void poshumim_blyat(void);
+  uint8_t readReg(uint8_t addr);
+  uint8_t readReg(uint8_t addr, uint8_t* buf, uint8_t len);
+  uint8_t writeReg(uint8_t addr, const uint8_t* buf, uint8_t len);
+  uint8_t writeReg(uint8_t addr, uint8_t value, uint8_t isCmd);
+  uint8_t writePayload(const void* buf, uint8_t len, const uint8_t writeType);
+  void flushTx(void);
+  void powerUp(void);
+  uint8_t getStatus(void);
+  uint8_t send(const void* buf, uint8_t len, uint8_t ack);
+  uint8_t send(const void* buf, uint8_t len);
+
+  uint8_t checkR(void);
+  uint8_t checkRW(void);
+  uint8_t checkW(void);
 private:
   SPI_interface _spi;
   uint8_t _curData = 0x00;
+  uint8_t _dynPL = 0;
 };
 
 #endif
