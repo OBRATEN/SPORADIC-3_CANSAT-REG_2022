@@ -19,7 +19,7 @@ public:
   uint8_t inited(void);
   uint8_t writeByte(uint8_t data);
   uint8_t readByte(void);
-  uint8_t writeReadByte(uint8_t data);
+  uint8_t transfer(uint8_t data);
 private:
   uint8_t _data;
   uint8_t _inited = 0;

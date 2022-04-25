@@ -10,7 +10,7 @@ UPLOADER = avrdude
 
 TARGET = main
 
-default: cppcompile upload clean
+default: cppcompile upload
 
 cppcompile:
 	$(CPPC) $(CFLAGS) $(CLIBS) src/$(TARGET).cpp ${CCODE} -o build/$(TARGET).elf

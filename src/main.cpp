@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stddef.h>
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -16,7 +17,6 @@
 #include "bmp280.hpp"
 #include "nrf24l01.hpp"
 #include "fat.hpp"
-
 
 #define DS_TIME_INTERVAL 750
 #define NRF_TIME_INTERVAL 1
@@ -42,7 +42,6 @@ inline void light(uint8_t time) {
 
 static uint32_t globalTime = 0;
 static uint32_t packageID = 0;
-static uint8_t mode = 0;
 
 //static uint32_t DS_time_mark = DS_TIME_INTERVAL;
 static uint32_t NRF_time_mark = NRF_TIME_INTERVAL;
@@ -59,8 +58,6 @@ static float alt = 0;
 static float zeroAlt = 0;
 uint8_t rxDataPtr;
 */
-
-static uint8_t testMessage[32];
 
 /*
 void calibrateAltitude(BMP_press* bmp, uint8_t times) {
@@ -82,6 +79,8 @@ void initSensors(ADXL_gyro* adxl, BMP_press* bmp) {
 }*/
 
 int main(void) {
+  char tx_message[32];
+  strcpy(tx_message, "Hello World!");
   cli();
   DDRG |= (1 << PING3);
   //UART_init(53, 1);
@@ -90,41 +89,22 @@ int main(void) {
   //DS18_term ds;
   //ADXL_gyro adxl;
   //BMP_press bmp;
+  nRF24_radio nrf;
+  nrf.begin();
+  nrf.setChannel(0x5C);
+  nrf.setDataRate(RF24_1MBPS);
+  nrf.setPALevel(RF24_PA_MIN);
+  nrf.openWritingPipe(0x7878787878LL);
   Timer_init(F_CPU);
   //initSensors(&adxl, &bmp);
-  nRF_radio nrf;
-  nrf.begin();
-  memset(testMessage, 't', 32);
-  blink(3);
   sei();
-  if (mode == 0) {
-    for (;;) {
-      /*
-      if (millis() > DS_time_mark) {
-        ds.readTemp(&DStemp);
-        DS_time_mark = millis() + DS_TIME_INTERVAL;
-      }
-      adxl.readXYZ(&aX, &aY, &aZ);
-      bmp.getData(&BMPtemp, &press, &alt);
-      //printf("asdasd");
-      */
-      if (millis() > NRF_time_mark) {
-        if (nrf.send(testMessage, 32)) blink(1);
-        NRF_time_mark = millis() + NRF_TIME_INTERVAL;
-      }
-      packageID++;
-      globalTime = millis();
+  light(8); // 800ms светодиода
+  for (;;) {
+    if (millis() > NRF_time_mark) {
+      if (nrf.write(tx_message, 32)) blink(1);
+      NRF_time_mark = millis() + NRF_TIME_INTERVAL;
     }
-  } else if (mode == 1) {
-    for (;;) {
-      if (nrf.checkW()) blink(1);
-      _delay_ms(500);
-      if (nrf.checkR()) blink(1);
-      _delay_ms(500);
-      if (nrf.checkRW()) blink(1);
-      _delay_ms(500);
-      light(10);
-    }
-  }
-  return 0;
+    packageID++;
+    globalTime = millis();
+  } return 0;
 }

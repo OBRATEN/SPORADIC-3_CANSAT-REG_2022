@@ -10,33 +10,44 @@
 #include <util/delay.h>
 
 #include "timer.h"
-#include "onewire.hpp"
 #include "uart.h"
-#include "i2c.hpp"
 #include "ds18b20.hpp"
 #include "adxl345.hpp"
 #include "bmp280.hpp"
 #include "nrf24l01.hpp"
+#include "fat.hpp"
+
 
 #define DS_TIME_INTERVAL 750
-#define NRF_TIME_INTERVAL 80
+#define NRF_TIME_INTERVAL 1
 
 inline void blink(uint8_t times) {
   cli();
   for (uint8_t i = 0; i < times; i++) {
-    PORTB |= _BV(PINB6);
+    PORTG |= (1 << PING3);
     _delay_ms(100);
-    PORTB &= ~_BV(PINB6);
+    PORTG &= ~(1 << PING3);
     _delay_ms(100);
-  } sei();
+  }
+  sei();
+}
+
+inline void light(uint8_t time) {
+  cli();
+  PORTG |= (1 << PING3);
+  _delay_ms(100 * time);
+  PORTG &= ~(1 << PING3);
+  sei();
 }
 
 static uint32_t globalTime = 0;
 static uint32_t packageID = 0;
+static uint8_t mode = 0;
 
-static uint32_t DS_time_mark = DS_TIME_INTERVAL;
+//static uint32_t DS_time_mark = DS_TIME_INTERVAL;
 static uint32_t NRF_time_mark = NRF_TIME_INTERVAL;
 
+/*
 static float aX = 0;
 static float aY = 0;
 static float aZ = 0;
@@ -46,11 +57,12 @@ static int32_t BMPtemp = 0;
 static float press = 0;
 static float alt = 0;
 static float zeroAlt = 0;
-
-char testMessage[32];
-
 uint8_t rxDataPtr;
+*/
 
+static uint8_t testMessage[32];
+
+/*
 void calibrateAltitude(BMP_press* bmp, uint8_t times) {
   for (uint8_t i = 0; i < 20; i++) {
     bmp->getData(&BMPtemp, &press, &alt);
@@ -62,6 +74,7 @@ void initSensors(ADXL_gyro* adxl, BMP_press* bmp) {
   if (!(adxl->begin(0x1d, 0))) adxl->begin(0x53, 0);
   if (!(bmp->begin(0x77, 0))) bmp->begin(0x76, 0);
 }
+*/
 
 /*ISR(USART1_RXC_vect) {
   blink();
@@ -70,7 +83,7 @@ void initSensors(ADXL_gyro* adxl, BMP_press* bmp) {
 
 int main(void) {
   cli();
-  DDRB |= (1 << PINB6);
+  DDRG |= (1 << PING3);
   //UART_init(53, 1);
   //uart_str = fdevopen(UART_writeChar1, UART_getChar1);
   //stdout = uart_str;
@@ -81,32 +94,37 @@ int main(void) {
   //initSensors(&adxl, &bmp);
   nRF_radio nrf;
   nrf.begin();
-  for (uint8_t c = 0; c < 32; c++) testMessage[c] = 'a';
+  memset(testMessage, 't', 32);
   blink(3);
   sei();
-  for (;;) {
-    PORTB |= _BV(PINB6);
-    _delay_ms(100);
-    PORTB &= ~_BV(PINB6);
-    _delay_ms(100);
-  }
-  for (;;) {
-    /*
-    if (millis() > DS_time_mark) {
-      ds.readTemp(&DStemp);
-      DS_time_mark = millis() + DS_TIME_INTERVAL;
+  if (mode == 0) {
+    for (;;) {
+      /*
+      if (millis() > DS_time_mark) {
+        ds.readTemp(&DStemp);
+        DS_time_mark = millis() + DS_TIME_INTERVAL;
+      }
+      adxl.readXYZ(&aX, &aY, &aZ);
+      bmp.getData(&BMPtemp, &press, &alt);
+      //printf("asdasd");
+      */
+      if (millis() > NRF_time_mark) {
+        if (nrf.send(testMessage, 32)) blink(1);
+        NRF_time_mark = millis() + NRF_TIME_INTERVAL;
+      }
+      packageID++;
+      globalTime = millis();
     }
-    adxl.readXYZ(&aX, &aY, &aZ);
-    bmp.getData(&BMPtemp, &press, &alt);
-    //printf("asdasd");
-    */
-    if (millis() > NRF_time_mark) {
-      nrf.sendMessage(testMessage, 32);
-      NRF_time_mark = millis() + NRF_TIME_INTERVAL;
+  } else if (mode == 1) {
+    for (;;) {
+      if (nrf.checkW()) blink(1);
+      _delay_ms(500);
+      if (nrf.checkR()) blink(1);
+      _delay_ms(500);
+      if (nrf.checkRW()) blink(1);
+      _delay_ms(500);
+      light(10);
     }
-    packageID++;
-    globalTime = millis();
-    blink(1);
   }
   return 0;
 }

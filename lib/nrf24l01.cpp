@@ -1,18 +1,5 @@
 #include "nrf24l01.hpp"
 
-#define AUTO_ACK      false
-#define DATARATE      RF_DR_1MBPS
-#define POWER         POWER_MIN
-#define CHANNEL       0x5C
-#define DYN_PAYLOAD   true
-#define CONTINUOUS    false
-
-#define RX_INTERRUPT  false
-#define TX_INTERRUPT  false
-#define RT_INTERRUPT  false
-
-#define PAYLOAD_SIZE  32
-
 // CE
 #define CE_DDR    DDRB
 #define CE_PORT   PORTB
@@ -21,186 +8,305 @@
 #define CSN_DDR   DDRB
 #define CSN_PORT  PORTB
 #define CSN_PIN   PINB0
-// IRQ
-#define IRQ_DDR   DDRD
-#define IRQ_PORT  PORTD
-#define IRQ_PIN   DDD2
 
-#define READ_PIPE 0
-uint8_t rx_address[5] = { 0x78, 0x78, 0x78, 0x78, 0x78 };
-uint8_t tx_address[5] = { 0x78, 0x78, 0x78, 0x78, 0x78 };
+#define max(a, b) (a > b ? a : b)
+#define min(a, b) (a < b ? a : b)
 
-inline void CSN_down(void) {
-  PORTB &= ~(1 << CSN);
+void nRF24_radio::csn(bool mode) {
+	if (mode == 1) CSN_DDR |= (1 << CSN_PIN);
+	else CSN_DDR &= ~(1 << CSN_PIN);
 }
 
-inline void CSN_up(void) {
-  PORTB |= (1 << CSN);
+void nRF24_radio::ce(bool mode) {
+	if (mode == 1) CE_DDR |= (1 << CE_PIN);
+	else CE_DDR &= ~(1 << CE_PIN);
 }
 
-inline void CE_down(void) {
-  PORTB &= ~(1 << CE);
+inline void nRF24_radio::beginTransaction(void) {
+	csn(0);
 }
 
-inline void CE_up(void) {
-  PORTB |= (1 << CE);
+inline void nRF24_radio::endTransaction(void) {
+	csn(1);
 }
 
-void nRF_radio::begin(void) {
-  if (!(_spi.inited())) _spi.init();
-  DDRB |= (1 << CSN);
-  DDRB |= (1 << CE);
-  CSN_up();
-  CE_down();
-  _delay_ms(100);
-  _curData =
-  (!(RX_INTERRUPT) << MASK_RX_DR)  |
-  (!(TX_INTERRUPT) << MASK_TX_DS)  |
-  (!(RT_INTERRUPT) << MASK_MAX_RT) |
-  (1 << EN_CRC)                    |
-  (1 << CRC0)                      |
-  (1 << PWR_UP)                    |
-  (1 << PRIM_RX);
-  this->writeReg(CONFIG, &_curData, 0);
-  _curData =
-  (AUTO_ACK << ENAA_P5) |
-  (AUTO_ACK << ENAA_P4) |
-  (AUTO_ACK << ENAA_P3) |
-  (AUTO_ACK << ENAA_P2) |
-  (AUTO_ACK << ENAA_P1) |
-  (AUTO_ACK << ENAA_P0);
-  this->writeReg(EN_AA, &_curData, 0);
-  _curData = 0xF0;
-  this->writeReg(SETUP_RETR, &_curData, 0);
-  _curData = 0;
-  this->writeReg(EN_RXADDR, &_curData, 0);
-  _curData = CHANNEL;
-  this->writeReg(RF_CH, &_curData, 0);
-  _curData =
-  (CONTINUOUS << CONT_WAVE)                |
-  ((DATARATE >> RF_DR_HIGH) << RF_DR_HIGH) |
-  ((POWER >> RF_PWR) << RF_PWR);
-  this->writeReg(RF_SETUP, &_curData, 0);
-  _curData =
-  (1 << RX_DR) |
-  (1 << TX_DS) |
-  (1 << MAX_RT);
-  this->writeReg(STATUS, &_curData, 0);
-  _curData =
-  (DYN_PAYLOAD << DPL_P0) |
-  (DYN_PAYLOAD << DPL_P1) |
-  (DYN_PAYLOAD << DPL_P2) |
-  (DYN_PAYLOAD << DPL_P3) |
-  (DYN_PAYLOAD << DPL_P4) |
-  (DYN_PAYLOAD << DPL_P5);
-  this->writeReg(DYNPD, &_curData, 0);
-  _dynPL = 1;
-  _curData =
-  (DYN_PAYLOAD << EN_DPL)  |
-  (AUTO_ACK << EN_ACK_PAY) |
-  (AUTO_ACK << EN_DYN_ACK);
-  this->writeReg(FEATURE, &_curData, 0);
-  _curData = 0;
-  _curData = (1 << RX_DR) | (1 << TX_DS) | (1 << MAX_RT);
-  this->writeReg(FLUSH_RX, NOP, 0);
-  this->writeReg(FLUSH_TX, NOP, 0);
-  this->writeReg(RX_ADDR_P0 + READ_PIPE, rx_address, 5);
-  this->writeReg(TX_ADDR, tx_address, 5);
-  this->writeReg(EN_RXADDR, &_curData, 0);
-  _curData |= (1 << READ_PIPE);
-  this->writeReg(EN_RXADDR, &_curData, 0);
+void nRF24_radio::readReg(uint8_t reg, uint8_t* buf, uint8_t len) {
+	beginTransaction();
+	_status = _spi.transfer(R_REGISTER | reg);
+	while (len--) (*buf++ = _spi.transfer(0xFF));
+	endTransaction();
 }
 
-uint8_t nRF_radio::readReg(uint8_t addr) {
-  uint8_t status = 0;
-  uint8_t result;
-  CSN_down();
-  status = _spi.writeReadByte(R_REGISTER | addr);
-  result = _spi.writeReadByte(0xFF);
-  CSN_up();
-  if (status) return result;
-  return 255;
+uint8_t nRF24_radio::readReg(uint8_t reg) {
+	uint8_t result;
+	beginTransaction();
+	_status = _spi.transfer(R_REGISTER | reg);
+	result = _spi.transfer(0xff);
+	endTransaction();
+	return result;
 }
 
-uint8_t nRF_radio::readReg(uint8_t addr, uint8_t* buf, uint8_t len) {
-  uint8_t status = 0;
-  CSN_down();
-  status = _spi.writeReadByte(R_REGISTER | addr);
-  while (len--) *buf++ = _spi.writeReadByte(0xFF);
-  CSN_up();
-  return status;
+void nRF24_radio::writeReg(uint8_t reg, const uint8_t* buf, uint8_t len) {
+	beginTransaction();
+	_status = _spi.transfer(W_REGISTER | reg);
+	while (len--) _spi.transfer(*buf++);
+	endTransaction();
 }
 
-uint8_t nRF_radio::writeReg(uint8_t addr, uint8_t value, uint8_t isCmd=0) {
-  uint8_t status = 0;
-  if (isCmd) {
-    CSN_down();
-    status = _spi.writeReadByte(W_REGISTER | addr);
-    CSN_up();
-  } else {
-    CSN_down();
-    status = _spi.writeReadByte(W_REGISTER | addr);
-    _spi.writeReadByte(value);
-    CSN_up();
+void nRF24_radio::writeReg(uint8_t reg, uint8_t value, bool is_cmd_only) {
+	if (is_cmd_only) {
+		beginTransaction();
+		_status = _spi.transfer(W_REGISTER | reg);
+		endTransaction();
+	} else{
+		beginTransaction();
+		_status = _spi.transfer(W_REGISTER | reg);
+		_spi.transfer(value);
+		endTransaction();
+	}
+}
+
+void nRF24_radio::writePayload(const void* buf, uint8_t data_len, const uint8_t writeType) {
+	const uint8_t* current = reinterpret_cast<const uint8_t*>(buf);
+	uint8_t blank_len = !data_len ? 1 : 0;
+	if (!dynamic_payloads_enabled) {
+		data_len = min(data_len, _payloadSize);
+		blank_len = static_cast<uint8_t>(_payloadSize - data_len);
+	} else data_len = min(data_len, static_cast<uint8_t>(32));
+	beginTransaction();
+	_status = _spi.transfer(writeType);
+	while (data_len--) { _spi.transfer(*current++); }
+	while (blank_len--) { _spi.transfer(0); }
+	endTransaction();
+}
+
+void nRF24_radio::readPayload(void* buf, uint8_t data_len) {
+	uint8_t* current = reinterpret_cast<uint8_t*>(buf);
+  uint8_t blank_len = 0;
+  if (!dynamic_payloads_enabled) {
+    data_len = min(data_len, _payloadSize);
+    blank_len = static_cast<uint8_t>(_payloadSize - data_len);
+  } else data_len = max(data_len, static_cast<uint8_t>(32));
+  beginTransaction();
+  _status = _spi.transfer(R_RX_PAYLOAD);
+  while (data_len--) {*current++ = _spi.transfer(0xFF);}
+  while (blank_len--) {_spi.transfer(0xFF);}
+  endTransaction();
+}
+
+uint8_t nRF24_radio::flush_rx(void) {
+  writeReg(FLUSH_RX, RF24_NOP, true);
+  return _status;
+}
+
+uint8_t nRF24_radio::flush_tx(void) {
+  writeReg(FLUSH_TX, RF24_NOP, true);
+  return _status;
+}
+
+uint8_t nRF24_radio::getStatus(void) {
+  writeReg(RF24_NOP, RF24_NOP, true);
+  return _status;
+}
+
+nRF24_radio::nRF24_radio(uint32_t _spi_speed)
+        :_spiSpeed(_spi_speed), _payloadSize(32), _is_p_variant(false), _is_p0_rx(false),
+        addr_width(5), dynamic_payloads_enabled(true), csDelay(5)
+{
+    _init_obj();
+}
+
+void nRF24_radio::_init_obj() {
+    pipe0_reading_address[0] = 0;
+    if(_spiSpeed <= 35000) _spiSpeed = RF24_SPI_SPEED;
+}
+
+void nRF24_radio::setChannel(uint8_t channel) {
+    const uint8_t max_channel = 125;
+    writeReg(RF_CH, min(channel, max_channel));
+}
+
+bool nRF24_radio::begin(void) {
+	return _init_pins() && _init_radio();
+}
+
+void nRF24_radio::openWritingPipe(uint64_t value) {
+  writeReg(RX_ADDR_P0, reinterpret_cast<uint8_t*>(&value), addr_width);
+  writeReg(TX_ADDR, reinterpret_cast<uint8_t*>(&value), addr_width);
+}
+
+bool nRF24_radio::_init_pins(void) {
+	CE_DDR |= (1 << CE_PIN);
+	ce(0);
+	CSN_DDR |= (1 << CSN_PIN);
+	csn(1);
+	_delay_ms(100);
+	return 1;
+}
+
+bool nRF24_radio::_init_radio(void) {
+	_delay_ms(5);
+	setRetries(5, 15);
+	setRadiation(RF24_PA_MAX, RF24_1MBPS);
+	uint8_t beforeToggle = readReg(FEATURE);
+	toggleFeatures();
+	uint8_t afterToggle = readReg(FEATURE);
+	_is_p_variant = beforeToggle == afterToggle;
+	if (afterToggle) {
+		if (_is_p_variant) toggleFeatures();
+		writeReg(FEATURE, 0);
+	}
+	ack_payloads_enabled = false;
+  writeReg(DYNPD, 0);
+  dynamic_payloads_enabled = false;
+  writeReg(EN_AA, 0x3F);
+  writeReg(EN_RXADDR, 3);
+  setPayloadSize(32);
+  setAddressWidth(5);
+  setChannel(76);
+  writeReg(NRF_STATUS, (1 << RX_DR) | (1 << TX_DS) | (1 << MAX_RT));
+  flush_rx();
+  flush_tx();
+  writeReg(NRF_CONFIG, ((1 << EN_CRC) | (1 << CRCO)));
+  _configReg = readReg(NRF_CONFIG);
+  powerUp();
+  return _configReg == ((1 << EN_CRC) | (1 << CRCO) | (1 << PWR_UP)) ? true : false;
+}
+
+bool nRF24_radio::isChipConnected() {
+  return readReg(SETUP_AW) == (addr_width - static_cast<uint8_t>(2));
+}
+
+void nRF24_radio::powerDown(void) {
+  ce(0); // Guarantee CE is low on powerDown
+  _configReg = static_cast<uint8_t>(_configReg & ~(1 << PWR_UP));
+  writeReg(NRF_CONFIG, _configReg);
+}
+
+void nRF24_radio::powerUp(void) {
+  if (!(_configReg & (1 << PWR_UP))) {
+    _configReg |= (1 << PWR_UP);
+    writeReg(NRF_CONFIG, _configReg);
+    _delay_us(RF24_POWERUP_DELAY);
   }
-  if (!(status)) return 255;
-  return status;
 }
 
-uint8_t nRF_radio::writeReg(uint8_t addr, const uint8_t* buf, uint8_t len) {
-  uint8_t status = 0;
-  CSN_down();
-  status = _spi.writeReadByte(W_REGISTER | addr);
-  while (len--) _spi.writeReadByte(*buf++);
-  CSN_up();
-  return status;
+bool nRF24_radio::write(const void* buf, uint8_t len, const bool multicast) {
+  startFastWrite(buf, len, multicast);
+  while (!(getStatus() & ((1 << TX_DS) | (1 << MAX_RT))));
+  ce(0);
+  writeReg(NRF_STATUS, (1 << RX_DR) | (1 << TX_DS) | (1 << MAX_RT));
+  if (_status & (1 << MAX_RT)) {
+    flush_tx();
+    return 0;
+  } return 1;
 }
 
-void nRF_radio::flushTx(void) {
-  this->writeReg(FLUSH_TX, NOP, 1);
+bool nRF24_radio::write(const void* buf, uint8_t len) {
+  return write(buf, len, 0);
 }
 
-uint8_t nRF_radio::writePayload(const void* buf, uint8_t len, const uint8_t writeType) {
-  uint8_t status;
-  const uint8_t* current = reinterpret_cast<const uint8_t*>(buf);
-  uint8_t blank = !(len) ? 1 : 0;
-  uint8_t dataLen = len;
-  dataLen = (dataLen < PAYLOAD_SIZE) ? len : 32;
-  if (!_dynPL) blank = static_cast<uint8_t>(PAYLOAD_SIZE - dataLen);
-  CSN_down();
-  status = _spi.writeReadByte(writeType);
-  while (dataLen--) _spi.writeReadByte(*current++);
-  while (blank--) _spi.writeReadByte(0);
-  CSN_up();
-  return status;
-}
-
-uint8_t nRF_radio::getStatus(void) {
-  return this->writeReg(NOP, NOP, 1);
-}
-
-uint8_t nRF_radio::send(const void* buf, uint8_t len, uint8_t ack) {
-  this->writePayload(buf, len, ack ? W_TX_PAYLOAD_NOACK : W_TX_PAYLOAD);
-  CE_up();
-  _delay_ms(10);
-  CE_down();
+bool nRF24_radio::writeFast(const void* buf, uint8_t len, const bool multicast) {
+  while ((getStatus() & ((1 << TX_FULL)))) if (_status & (1 << MAX_RT)) return 0;
+  startFastWrite(buf, len, multicast);
   return 1;
 }
 
-uint8_t nRF_radio::send(const void* buf, uint8_t len) {
-  return this->send(buf, len, 0);
+bool nRF24_radio::writeFast(const void* buf, uint8_t len) {
+    return writeFast(buf, len, 0);
 }
 
-uint8_t nRF_radio::checkR(void) {
-  return (this->readReg(CONFIG) != 255);
+void nRF24_radio::startFastWrite(const void* buf, uint8_t len, const bool multicast, bool startTx) {
+  writePayload(buf, len, multicast ? W_TX_PAYLOAD_NO_ACK : W_TX_PAYLOAD);
+  if (startTx) ce(1);
 }
 
-uint8_t nRF_radio::checkRW(void) {
-  this->writeReg(CONFIG, 0x77, 1);
-  uint8_t data = this->readReg(CONFIG);
-  return (data == 0xFF);
+bool nRF24_radio::startWrite(const void* buf, uint8_t len, const bool multicast) {
+  writePayload(buf, len, multicast ? W_TX_PAYLOAD_NO_ACK : W_TX_PAYLOAD);
+  ce(1);
+  _delay_ms(1);
+  ce(0);
+  return !(_status & (1 << TX_FULL));
 }
 
-uint8_t nRF_radio::checkW(void) {
-  return (this->writeReg(CONFIG, 0x77, 0));
+bool nRF24_radio::rxFifoFull() {
+  return readReg(FIFO_STATUS) & (1 << RX_FULL);
+}
+
+bool nRF24_radio::txStandBy() {
+  while (!(readReg(FIFO_STATUS) & (1 << TX_EMPTY))) {
+    if (_status & (1 << MAX_RT)) {
+      writeReg(NRF_STATUS, (1 << MAX_RT));
+      ce(0);
+      flush_tx();
+      return 0;
+    }
+  }
+  ce(0);
+  return 1;
+}
+
+void nRF24_radio::setAddressWidth(uint8_t a_width) {
+  a_width = static_cast<uint8_t>(a_width - 2);
+  if (a_width) {
+    writeReg(SETUP_AW, static_cast<uint8_t>(a_width % 4));
+    addr_width = static_cast<uint8_t>((a_width % 4) + 2);
+  } else {
+    writeReg(SETUP_AW, static_cast<uint8_t>(0));
+    addr_width = static_cast<uint8_t>(2);
+  }
+}
+
+void nRF24_radio::toggleFeatures(void) {
+  beginTransaction();
+  _status = _spi.transfer(ACTIVATE);
+  _spi.transfer(0x73);
+  endTransaction();
+}
+
+void nRF24_radio::setPALevel(uint8_t level, bool lnaEnable) {
+  uint8_t setup = readReg(RF_SETUP) & static_cast<uint8_t>(0xF8);
+  setup |= _pa_level_reg_value(level, lnaEnable);
+  writeReg(RF_SETUP, setup);
+}
+
+bool nRF24_radio::setDataRate(rf24_datarate_e speed) {
+  bool result = false;
+  uint8_t setup = readReg(RF_SETUP);
+  setup = static_cast<uint8_t>(setup & ~((1 << RF_DR_LOW) | (1 << RF_DR_HIGH)));
+  setup |= _data_rate_reg_value(speed);
+  writeReg(RF_SETUP, setup);
+  if (readReg(RF_SETUP) == setup) {
+    result = true;
+  } return result;
+}
+
+void nRF24_radio::setRetries(uint8_t delay, uint8_t count) {
+  writeReg(SETUP_RETR, static_cast<uint8_t>(min(15, delay) << ARD | min(15, count)));
+}
+
+void nRF24_radio::setRadiation(uint8_t level, rf24_datarate_e speed, bool lnaEnable) {
+  uint8_t setup = _data_rate_reg_value(speed);
+  setup |= _pa_level_reg_value(level, lnaEnable);
+  writeReg(RF_SETUP, setup);
+}
+
+void nRF24_radio::setPayloadSize(uint8_t size) {
+  _payloadSize = static_cast<uint8_t>(max(1, min(32, size)));
+  for (uint8_t i = 0; i < 6; ++i) writeReg(static_cast<uint8_t>(RX_PW_P0 + i), _payloadSize);
+}
+
+uint8_t nRF24_radio::_pa_level_reg_value(uint8_t level, bool lnaEnable) {
+  return static_cast<uint8_t>(((level > RF24_PA_MAX ? static_cast<uint8_t>(RF24_PA_MAX) : level) << 1) + lnaEnable);
+}
+
+uint8_t nRF24_radio::_data_rate_reg_value(rf24_datarate_e speed) {
+  txDelay = 85;
+  if (speed == RF24_250KBPS) {
+    txDelay = 155;
+    return static_cast<uint8_t>((1 << RF_DR_LOW));
+  } else if (speed == RF24_2MBPS) {
+    txDelay = 65;
+    return static_cast<uint8_t>((1 << RF_DR_HIGH));
+  } return static_cast<uint8_t>(0);
 }
