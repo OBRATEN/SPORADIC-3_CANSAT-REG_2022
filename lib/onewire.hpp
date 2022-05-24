@@ -11,10 +11,10 @@
 #include <avr/io.h>
 #include <util/delay.h>
 
-#define OWPORT PORTC
-#define OWDIR  DDRC
-#define OWPIN  PINC
-#define OWPINN PC1
+#define OWPORT PORTD
+#define OWDIR  DDRD
+#define OWPIN  PIND
+#define OWPINN PD7
 
 class OW_interface {
 public:

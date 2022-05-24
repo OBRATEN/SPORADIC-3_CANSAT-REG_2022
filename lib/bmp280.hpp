@@ -1,19 +1,14 @@
 #ifndef BMP_H
 #define BMP_H
 
-#ifndef F_CPU
-#define F_CPU 8000000UL
-#endif
-
-#ifndef F_SCL
-#define F_SCL 100000
-#endif
-
 /* Библиотека связи с баротермометром BMP280
  * Автор: Гарагуля Артур, "SPORADIC", г. Курск
  * Интерфейс: I2C
  * Зависимости: avr, i2c
  */
+
+#define F_CPU 8000000UL
+#define F_SCL 400000UL
 
 #include <avr/io.h>
 #include <util/delay.h>
@@ -49,26 +44,25 @@
 #define BMP_NOSPI 0b00
 
 #define BMP_CFG  (BMP_TSB250 << 5)    | (BMP_FILTC4 << 2)     | (BMP_NOSPI)
-#define BMP_MEAS (BMP_OVSAMP_T2 << 5) | (BMP_OVSAMP_T16 << 2) | (BMP_FORCE)
+#define BMP_MEAS 0xFD
 
 class BMP_press {
 public:
-  uint8_t begin(uint8_t addr, uint8_t I2C_inited);
-  void writeReg1B(uint8_t addr, uint8_t data);
-  uint8_t readReg1B(uint8_t addr);
-  uint16_t readReg2B(uint8_t addr);
-  uint16_t readReg2BLE(uint8_t addr);
-  int16_t readRegS2BLE(uint8_t addr);
-  uint32_t readReg3B(uint8_t addr);
+  BMP_press(void);
+  uint8_t begin(uint8_t addr);
+  void writeReg(uint8_t addr, uint8_t data);
+  uint8_t readReg(uint8_t addr);
+  uint16_t read16_LE(uint8_t reg);
+  int32_t readReg24b(uint8_t addr);
   void readCalData(void);
-  int32_t readTemp(void);
-  void readFloatPress(int32_t *temp, float *press);
-  float readAlt(float *press);
-  uint8_t getData(int32_t *temp, float *press, float *alt);
+  double readTemp(void);
+  void readFloatPress(double *temp, double *press);
+  void readAlt(double *press, double *alt);
+  uint8_t getData(double *temp, double *press, double *alt);
 private:
   uint8_t devAddr;
-  uint8_t t1, p1;
-  int16_t t2, t3, p2, p3, p4, p5, p6, p7, p8, p9;
+  uint16_t t1, p1 = 0;
+  int16_t t2, t3, p2, p3, p4, p5, p6, p7, p8, p9 = 0;
   int32_t t_fine;
   I2C_interface _i2c;
 };

@@ -1,5 +1,5 @@
-#ifndef UART_h
-#define UART_h
+#ifndef UART_H
+#define UART_H
 
 #define F_CPU 8000000UL
 
@@ -8,10 +8,10 @@
 #include <util/delay.h>
 #include <stdio.h>
 
-void UART_init(uint8_t ubrr, uint8_t idx);
+void UART_init(uint16_t ubrr, uint8_t idx);
 int UART_writeChar1(char data, FILE *stream);
 int UART_getChar1(FILE *stream);
-int UART_writeChar0(char data, FILE *stream);
+int UART_writeChar0(char data);
 int UART_getChar0(FILE *stream);
 
-#endif
+#endif // UART_H

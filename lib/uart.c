@@ -9,7 +9,7 @@ inline void blink(void) {
   sei();
 }
 
-void UART_init(uint8_t ubrr, uint8_t idx) {
+void UART_init(uint16_t ubrr, uint8_t idx) {
 	if (!idx) {
 		UBRR0L = ubrr;
 		UBRR0H = 0x00;
@@ -21,14 +21,9 @@ void UART_init(uint8_t ubrr, uint8_t idx) {
 		UCSR1B = (1<<RXEN1)|(1<<TXEN1)|(1<<RXCIE1);
 		UCSR1C = (1<<USBS1)|(1<<UCSZ10)|(1<<UCSZ11);
 	}
-	//UCSR0C = (1 << USBS0) | (3 << UCSZ00);
-	//UCSR0C |= (1 << 1);
-	//UCSR0C |= (1 << 2);
-	//UCSR0B &= ~(1 << 2);
-	//UCSR0C |= (1 << 3);
 }
 
-int UART_writeChar0(char data, FILE *stream) {
+int UART_writeChar0(char data) {
 	while (!(UCSR0A & (1 << UDRE0)))
 	UDR0 = data;
 	return 0;

@@ -1,21 +1,14 @@
 #ifndef TIMER_H
 #define TIMER_H
 
-/* Библиотека управления таймером ATMega128a
- * Автор: Гарагуля Артур, "SPORADIC", г. Курск
- * Зависимости: avr
- * Является реализацией millis() Arduino.
- * Настройка велась на счётчик со сбросом по переполнению на 1ms.
- * Тактовая частота тестирующего микроконтроллера (F_CPU) - 8MHz (8000000UL)
- */
-
 #include <avr/io.h>
-#include <avr/interrupt.h>
 #include <util/atomic.h>
+#include <avr/interrupt.h>
 
-ISR(TIMER1_COMA_vect);
+extern volatile uint32_t timer1_millis;
 
-void Timer_init(uint32_t f_cpu);
-uint32_t millis(void);
+ISR(TIMER1_COMPA_vect);
+void Timer_init(unsigned long f_cpu);
+unsigned long millis(void);
 
-#endif
+#endif // TIMER_H

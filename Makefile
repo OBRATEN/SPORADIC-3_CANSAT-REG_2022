@@ -1,10 +1,10 @@
 CPPC = avr-g++
 DEVICE = m128
 DEVICEID = atmega128a
-CFLAGS = -g -Wall -Os -mmcu=$(DEVICEID)
+CFLAGS = -g -Wall -O1 -mmcu=$(DEVICEID)
 PRINTFLAGS = -Wl,-u,vfprintf -lprintf_flt -lm
 CLIBS = -I lib/
-CCODE = lib/i2c.cpp lib/onewire.cpp lib/uart.c lib/spi.cpp lib/sd_util.cpp lib/fat.cpp lib/timer.c lib/adxl345.cpp lib/ds18b20.cpp lib/bmp280.cpp lib/nrf24l01.cpp
+CCODE = lib/i2c.cpp lib/onewire.cpp lib/uart.c lib/spi.cpp lib/timer.c lib/sd.cpp lib/adxl345.cpp lib/ds18b20.cpp lib/bmp280.cpp lib/nrf24l01.cpp
 PROGRAMMER = usbasp
 UPLOADER = avrdude
 

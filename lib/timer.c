@@ -1,24 +1,22 @@
 #include "timer.h"
 
-volatile uint32_t _millis = 0;
+volatile unsigned long timer1_millis;
 
 ISR(TIMER1_COMPA_vect) {
-  _millis++;
+  timer1_millis++;
 }
 
-void Timer_init(uint32_t f_cpu) {
-  TCCR1B = (1 << WGM12);
-  TCCR1B |= (0 << CS12) | (1 << CS11) | (1 << CS10);
-  uint32_t overflow = ((f_cpu / 64) / 1000);
-  OCR1AH = (overflow >> 8);
-  OCR1AL = overflow;
-  TIMSK |= (1<<OCIE1A);
+void Timer_init(unsigned long f_cpu) {
+  unsigned long ctc_match_overflow = ((f_cpu / 1000) / 8);
+  TCCR1B |= (1 << WGM12) | (1 << CS11);
+  OCR1AH = (ctc_match_overflow >> 8);
+  OCR1AL = ctc_match_overflow;
+  TIMSK |= (1 << OCIE1A);
 }
 
-uint32_t millis(void) {
-  uint32_t response;
+unsigned long millis (void) {
+  unsigned long millis_return;
   ATOMIC_BLOCK(ATOMIC_FORCEON) {
-    response = _millis;
-  }
-  return response;
+    millis_return = timer1_millis;
+  } return millis_return;
 }

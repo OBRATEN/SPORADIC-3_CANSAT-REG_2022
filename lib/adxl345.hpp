@@ -6,7 +6,7 @@
 #endif
 
 #ifndef F_SCL
-#define F_SCL 100000
+#define F_SCL 400000
 #endif
 
 /* Библиотека связи с акселерометром ADXL345
@@ -72,8 +72,9 @@
 
 class ADXL_gyro {
 public:
+  ADXL_gyro(void);
   uint8_t initI2C(uint32_t f_cpu, uint32_t f_scl);
-  uint8_t begin(uint8_t addr, uint8_t I2C_inited); 
+  uint8_t begin(uint8_t addr); 
   uint8_t addressExists();
   void configure(void);
   void powerOn(void);

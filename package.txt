@@ -1,1 +1,2 @@
-DEVICE:team|packageId|time|DStemp|BMPtemp|aX|aY|aZ|press|alt|GPSDATA;
+DATA:	aX|aY|aZ|dsTemp|bmpTemp|press|alt|millis|id|statusByte;
+GPS:	prefix|let|lon;
