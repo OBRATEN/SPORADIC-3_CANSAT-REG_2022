@@ -46,7 +46,7 @@ void BMP_press::readCalData(void) {
   p9 = _i2c.readReg(0x77, 0x9E, 2);
 }
 
-uint8_t BMP_press::begin(uint8_t addr) {
+uint8_t BMP_press::init(uint8_t addr) {
   devAddr = addr;
   if (readReg(BMP_CHIPIDREG) != BMP_CHIPIDVAL) return 0;
   readCalData();

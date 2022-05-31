@@ -1,20 +1,17 @@
 #ifndef I2C_H
 #define I2C_H
 
-#define F_CPU 8000000UL
-
 /* Библиотека управления интерфейсом TWI (I2C)
  * Автор: Гарагуля Артур, "SPORADIC", г. Курск
  * Зависимости: avr
  */
 
-#include <avr/io.h>
-#include <util/delay.h>
+#include "config.h"
 
 class I2C_interface {
 public:
   void init(uint32_t f_cpu, uint32_t f_scl);
-  uint8_t inited(void);
+  uint8_t inited(void) { return _inited; }
   uint8_t start(void);
   uint8_t stop(void);
   uint8_t close(void);

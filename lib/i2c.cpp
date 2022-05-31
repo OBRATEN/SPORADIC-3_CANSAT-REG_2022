@@ -10,10 +10,6 @@ void I2C_interface::init(uint32_t f_cpu, uint32_t f_scl) {
   _inited = 1;
 }
 
-uint8_t I2C_interface::inited(void) {
-  return _inited;
-}
-
 uint8_t I2C_interface::start(void) {
   TWCR = ((1 << TWINT) | (1 << TWEN) | (1 << TWSTA));
   while(!(TWCR & (1 << TWINT)));

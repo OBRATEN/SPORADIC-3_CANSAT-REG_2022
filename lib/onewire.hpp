@@ -1,24 +1,19 @@
 #ifndef ONEWIRE_H
 #define ONEWIRE_H
 
-#define F_CPU 8000000UL
-
 /* Библиотека управления интерфейсом OneWire
  * Автор: Гарагуля Артур, "SPORADIC", г. Курск
  * Зависимости: avr
  */
 
-#include <avr/io.h>
+#include "config.h"
+#include "pinout.h"
 #include <util/delay.h>
-
-#define OWPORT PORTD
-#define OWDIR  DDRD
-#define OWPIN  PIND
-#define OWPINN PD7
 
 class OW_interface {
 public:
   void init(void);
+  uint8_t inited(void) { return _inited; }
   uint8_t reset(void);
   void writeBit(uint8_t bit);
   void writeByte(uint8_t data);
@@ -30,6 +25,8 @@ private:
   inline void setHigh(void);
   inline void input(void);
   inline void output(void);
+private:
+  uint8_t _inited = 0;
 };
 
 #endif

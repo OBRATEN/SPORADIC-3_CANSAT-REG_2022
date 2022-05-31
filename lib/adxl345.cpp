@@ -30,7 +30,7 @@ void ADXL_gyro::powerOn(void) {
   _i2c.writeReg(_devAddr, 0x2D, 0x08);
 }
 
-uint8_t ADXL_gyro::begin(uint8_t addr) {
+uint8_t ADXL_gyro::init(uint8_t addr) {
   _devAddr = addr;
   if (!(addressExists())) return 0;
   _i2c.writeReg(_devAddr, AXEL_BW_RATE_REG, AXEL_BW_RATE_25);

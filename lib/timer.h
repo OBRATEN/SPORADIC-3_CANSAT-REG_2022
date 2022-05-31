@@ -1,7 +1,7 @@
 #ifndef TIMER_H
 #define TIMER_H
 
-#include <avr/io.h>
+#include "config.h"
 #include <util/atomic.h>
 #include <avr/interrupt.h>
 

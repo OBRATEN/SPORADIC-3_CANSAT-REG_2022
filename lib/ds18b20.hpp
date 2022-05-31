@@ -7,7 +7,7 @@
  * Зависимости: avr, onewire
  */
 
-#include <avr/io.h>
+#include "config.h"
 #include "onewire.hpp"
 
 class DS18_term : public OW_interface {

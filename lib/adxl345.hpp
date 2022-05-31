@@ -1,13 +1,8 @@
 #ifndef ADXL345_H
 #define ADXL345_H
 
-#ifndef F_CPU
-#define F_CPU 8000000UL
-#endif
-
-#ifndef F_SCL
-#define F_SCL 400000
-#endif
+#include "config.h"
+#include "i2c.hpp"
 
 /* Библиотека связи с акселерометром ADXL345
  * Автор: Гарагуля Артур, "SPORADIC", г. Курск
@@ -15,8 +10,6 @@
  * Зависимости: avr, i2c
  */
 
-#define AXEL_DEF_ADDR 0x1d
-#define AXEL_ALT_ADDR 0x53
 #define AXEL_DEVID 0x00
 #define AXEL_DEV 0xe5
 
@@ -68,13 +61,11 @@
 #define AXEL_WAKEUP2 0b10
 #define AXEL_WAKEUP1 0b11
 
-#include "i2c.hpp"
-
 class ADXL_gyro {
 public:
   ADXL_gyro(void);
   uint8_t initI2C(uint32_t f_cpu, uint32_t f_scl);
-  uint8_t begin(uint8_t addr); 
+  uint8_t init(uint8_t addr); 
   uint8_t addressExists();
   void configure(void);
   void powerOn(void);

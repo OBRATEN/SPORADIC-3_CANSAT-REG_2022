@@ -7,12 +7,10 @@
  * Зависимости: avr, i2c
  */
 
-#define F_CPU 8000000UL
-#define F_SCL 400000UL
-
-#include <avr/io.h>
-#include <util/delay.h>
+#include "config.h"
 #include "i2c.hpp"
+
+#include <util/delay.h>
 
 #define BMP_T1REG 0x88
 #define BMP_T2REG 0x8A
@@ -49,7 +47,7 @@
 class BMP_press {
 public:
   BMP_press(void);
-  uint8_t begin(uint8_t addr);
+  uint8_t init(uint8_t addr);
   void writeReg(uint8_t addr, uint8_t data);
   uint8_t readReg(uint8_t addr);
   uint16_t read16_LE(uint8_t reg);
