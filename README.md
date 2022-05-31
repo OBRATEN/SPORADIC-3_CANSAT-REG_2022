@@ -22,4 +22,4 @@
 Создать внешнюю систему "Watchdog" для защиты от зависаний на основе микроконтроллера ATtiny;
 Создать несколько типов пакетов отправки на разных высотах (от 128Б до 2Кб).
 
-![alt_text](https://github.com/OBRATEN/CanSat_REG_2021-2022/blob/main/2021-12-20-182703_1366x768_scrot.png)
+![alt_text](https://github.com/OBRATEN/SPORADIC-3_CANSAT-REG_2022/blob/main/l0.png)
