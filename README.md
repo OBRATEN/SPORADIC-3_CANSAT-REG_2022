@@ -2,7 +2,7 @@
 Характеристики ATmega128a:
 4Кб SRAM, 128Кб FLASH, 512Б EEPROM, тактовая частота внутреннего резонатора до 8MGz.
 
-Языки программирования: C/C++, AVR Assembley
+Языки программирования: C/C++, AVR Assembly
 
 Используемые интерфейсы: I2C(TWI), OneWire(1-Wire), SPI, UART
 
